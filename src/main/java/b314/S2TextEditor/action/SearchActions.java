@@ -8,105 +8,154 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * Implements search-related actions, like
+ * search in file, match results iterating, regex usage etc.
+ */
 @Service
 public class SearchActions {
 
+    // To indicate regex usage
     private boolean useRegexFlag;
 
-    private List<SearchResult> searchResults;
+    // List to store search results
+    private final List<SearchResult> searchResults = new ArrayList<>();
 
+    // Index of current (selected) match
     private int currentResultIndex;
 
-    boolean switchRegexFlag() {
+    /**
+     * Switches regex usage
+     * true -> false
+     * false -> true
+     * @return updated flag value
+     */
+    public boolean switchRegexFlag() {
         useRegexFlag = !useRegexFlag;
         return useRegexFlag;
     }
 
-    SearchResult search(String content, String target) {
-        searchResults = new ArrayList<>();
+    /**
+     * Searches for target in content
+     * Type of search (substring or regex) is defined by useRegexFlag
+     * @param content String to search in
+     * @param target substring or regex to search for
+     * @return 1st match result (if found)
+     * @throws IndexOutOfBoundsException if no match found
+     */
+    public SearchResult search(String content, String target) throws IndexOutOfBoundsException {
+        // Clearing old results
+        searchResults.clear();
+
+        // Resetting current result index
         currentResultIndex = -1;
+
+        // Deciding for search type
         if (useRegexFlag) {
-            searchByMatch(content, target);
+            // Searching by regex
+            searchByRegex(content, target);
         } else {
+            // Searching by substring
             searchSubstring(content, target);
         }
-        try {
-            return searchResults.get(currentResultIndex);
-        } catch (IndexOutOfBoundsException e) {
-            System.out.println("No match present!");
-            return null;
+
+        // Checking for currentResultIndex update
+        if (!searchResults.isEmpty()) {
+            // There are matches -> current result index is 0
+            currentResultIndex = 0;
         }
+
+        // Returning
+        return searchResults.get(currentResultIndex);
     }
 
+    /**
+     * Implements substring search
+     * @param content String to search IN
+     * @param target String to search FOR (exactly)
+     */
     private void searchSubstring(String content, String target) {
+        // Empty check
         if ("".equals(target)) {
             return;
         }
 
+        // Recursive search
         f(content, target, 0);
-
-        if (!searchResults.isEmpty()) {
-            currentResultIndex = 0;
-        }
     }
 
+    /**
+     * Recursively runs substring search:
+     * Adds 1st occurrence of target in content, calls itself with offset on content
+     * @param content String to search in
+     * @param target String to search for
+     * @param offset accumulator to calculate match position in original string
+     */
     private void f(String content, String target, int offset) {
+        // target longer than content -> no match left, return
         if (target.length() > content.length()) {
             return;
         }
 
+        // Getting 1st occurrence
         int index = content.indexOf(target);
 
         if (index == -1) {
+            // No match, return
             return;
         }
 
+        // Adding new match to list
         searchResults.add(new SearchResult(index + offset, target));
 
+        // Recursion
         int nextOffset = index + offset + target.length();
         f(content.substring(index + target.length()), target, nextOffset);
     }
 
-    private void searchByMatch(String content, String regex) {
-        Pattern target = Pattern.compile(regex);
-        Matcher matcher = target.matcher(content);
+    /**
+     * Implements search by regex
+     * @param content String to search in
+     * @param regex to search with
+     */
+    private void searchByRegex(String content, String regex) {
+        // Creating matcher
+        Matcher matcher = Pattern.compile(regex).matcher(content);
+
+        // Searching
         while (matcher.find()) {
             searchResults.add(new SearchResult(matcher.start(), matcher.group()));
         }
-
-        if (!searchResults.isEmpty()) {
-            currentResultIndex = 0;
-        }
     }
 
-    SearchResult previousMatch() {
+    /**
+     * Previous match getter (relative to current)
+     * @return previous match
+     * @throws IndexOutOfBoundsException if no match was originally found
+     */
+    public SearchResult previousMatch() throws IndexOutOfBoundsException {
         if (currentResultIndex != -1) {
             currentResultIndex--;
         }
         if (currentResultIndex < 0) {
             currentResultIndex = searchResults.size() - 1;
         }
-        try {
-            return searchResults.get(currentResultIndex);
-        } catch (Exception e) {
-            System.out.println("No match present!");
-            return null;
-        }
+        return searchResults.get(currentResultIndex);
     }
 
-    SearchResult nextMatch() {
+    /**
+     * Next match getter (relative to current)
+     * @return next match
+     * @throws IndexOutOfBoundsException if no match was originally found
+     */
+    public SearchResult nextMatch() throws IndexOutOfBoundsException {
         if (currentResultIndex != -1) {
             currentResultIndex++;
         }
         if (currentResultIndex >= searchResults.size()) {
             currentResultIndex = 0;
         }
-        try {
-            return searchResults.get(currentResultIndex);
-        } catch (Exception e) {
-            System.out.println("No match present!");
-            return null;
-        }
+        return searchResults.get(currentResultIndex);
     }
 
 }
