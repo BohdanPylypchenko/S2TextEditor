@@ -5,9 +5,20 @@ import org.springframework.context.annotation.Configuration;
 
 import javax.swing.*;
 
+/**
+ * TEFrame configuration class
+ */
 @Configuration
 public class TEFrameConfiguration {
 
+    /**
+     * TEFrame bean
+     * @param fileChooser JFileChooser instance bean
+     * @param menuBar JMenuBar instance bean
+     * @param controlPanel JPanel instance bean
+     * @param scrollPane JScrollPane instance bean
+     * @return TEFrame bean
+     */
     @Bean
     public TEFrame teFrame(JFileChooser fileChooser,
                            JMenuBar menuBar,
