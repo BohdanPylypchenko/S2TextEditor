@@ -16,4 +16,4 @@ Notepad-like text editor. Swing is used as GUI, Spring Boot successfully used to
 Features:
 1. Open, save, save as files
 2. Edit text in notepad/Nano way
-3. Search though text: substring and regex modes
+3. Search through text: substring and regex modes
